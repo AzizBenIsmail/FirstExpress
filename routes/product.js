@@ -1,32 +1,63 @@
-var express = require('express');
-var router = express.Router();
-
-class product {
-    constructor(id,name,manufacturer,price,stock,pors,disk,dis,ultrabook) {
-      this.id = id;  
-      this.name = name;
-      this.manufacturer = manufacturer;
-      this.price = price;
-      this.stock = stock;
-      this.options=[pors,disk,dis]
-      this.ultrabook = ultrabook;
+const express = require("express");
+const router = express.Router();
+const products = require("../products.json");
+router.get("/", (req, res, next) => {
+  try {
+    if (!products) {
+      throw new Error("products not found!");
     }
+    res.json(products);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
   }
-  let product1 = new product("MACBOOKPRO", "Macbook Pro","Apple",1299,32,"Intel core i5","Retina Display","Long life battery");
-  let product2 = new product("MACBOOKAIR", "Thinkpad x230","Lenovo",1099.99,112,"Intel core i7","SSD","Long life battery",true);
-  let product3 = new product("LENOVOX230", "Macbook Pro","Apple",1099.99,0,"Intel core i5","SSD","Long life battery",true);
+});
 
-  var products=[{product1,product2,product3}]
+router.get("/:id", (req, res, next) => {
+  try {
+    const { id } = req.params;
+    if (!products[id]) {
+      throw new Error("product not found!");
+    }
+    res.json(products[id]);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
 
-    router.get('/', async function (req, res, next) {
-        //var x = req.params.id;
-        res.json(product1)
-      });
+router.get("/instock/:qt", (req, res, next) => {
+  try {
+    const { qt } = req.params;
+    let productsToBuy = [];
+    for (const [key, value] of Object.entries(products)) {
+      if(value.stock >= qt){
+        productsToBuy.push({key, value});
+      }
+    }
+    if(productsToBuy.length === 0){
+        throw new Error("products out of stock!");
+    }
+    res.json(productsToBuy);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
 
-      router.get('/:id', async function (req, res, next) {
-        var x = req.params.id;
-        res.json(product1)
-        //console.log(tab[x])
-      });
+router.get("/:id/:qt", (req, res, next) => {
+  try {
+    const { id, qt } = req.params;
+    if (!products[id]) {
+      throw new Error("product not found!");
+    }
+    let productToBuy = {
+      id: id,
+      qt: parseInt(qt),
+      unit_price: parseInt(products[id].price),
+      total_price: parseInt(products[id].price) * parseInt(qt),
+    };
+    res.json(productToBuy);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
 
-    module.exports = router;
+module.exports = router;
