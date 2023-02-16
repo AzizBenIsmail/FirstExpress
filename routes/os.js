@@ -1,50 +1,52 @@
-var express = require('express');
-var os = require("os")
-var router = express.Router();
+const express = require("express");
+const router = express.Router();
+const os = require("os");
 
+router.get("/", (req, res, next) => {
+  try {
+    const osInformations = {
+      hostname: os.hostname(),
+      type: os.type(),
+      platform: os.platform(),
+    };
+    if (!osInformations) {
+      throw new Error("there s no information for your os");
+    }
+    res.json(osInformations);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
 
-let tab=[{
-	"MACBOOKPRO":{
-        "name":"Macbook Pro",
-        "manufacturer":"Apple",
-        "price":1299,
-        "stock":32,
-        "options":["Intel core i5","Retina Display","Long life battery"]
-    }},{
-	"MACBOOKAIR":{
-        "name":"Macbook Pro Air",
-        "manufacturer":"Apple",
-        "price":1099.99,
-        "ultrabook":true,
-        "stock":112,
-        "options":["Intel core i7","SSD","Long life battery"]
-    }},{
-	 "LENOVOX230":{
-        "name":"Thinkpad x230",
-        "manufacturer":"Lenovo",
-        "price":1099.99,
-        "ultrabook":true,
-        "stock":0,
-        "options":["Intel core i5","SSD","Long life battery"]
-    }}];
+router.get("/cpus", (req, res, next) => {
+  try {
+    const osCpus = os.cpus();
+    if (!osCpus) {
+      throw new Error("no cpus was found!");
+    }
+    res.json(osCpus);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
 
-/* GET home page. */
-router.get('/', function (req, res, next) {
-    res.json({
-        hostname: os.hostname(),
-        type:os.type(),
-        platform: os.platform(),
-    })
-  });
-
-  router.get('/cpus/', function (req, res, next) {
-    res.json(tab)
-  });
-
-  router.get('/cpus/:id', async function (req, res, next) {
-    var x = req.params.id;
-    res.json(tab[x])
-    console.log(tab[x])
-  });
+router.get("/cpus/:id", (req, res, next) => {
+  try {
+    const { id } = req.params;
+    if (!Number.isInteger(parseInt(id))) {
+      throw new Error("you must provide a Number!");
+    }
+    const osCpus = os.cpus();
+    if (!osCpus) {
+      throw new Error("no cpus was found!");
+    }
+    if (id < 0 || id > osCpus.length - 1) {
+      throw new Error("you must provide a valid id");
+    }
+    res.json(osCpus[id]);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
 
 module.exports = router;
